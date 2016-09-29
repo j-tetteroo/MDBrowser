@@ -52,22 +52,33 @@ class BrowserDialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("MDBrowser")
         Dialog.resize(1024, 768)
+	 
+	self.layout =  QtGui.QVBoxLayout()
+	self.tabLayout = QtGui.QVBoxLayout()
 
-        self.renderPage = QWebView(Dialog)
+        self.renderPage = QWebView()
         self.renderPage.setGeometry(QtCore.QRect(0, 200, 1020, 711))
         self.renderPage.setObjectName("renderPage")
 
         # Textbox
-        self.urlBox = QtGui.QLineEdit(Dialog)
+        self.urlBox = QtGui.QLineEdit()
         self.urlBox.setGeometry(QtCore.QRect(10, 20, 1000, 25))
         self.urlBox.setObjectName("urlBox")
 
 	# Tabwidget
-        self.tabs = QtGui.QTabWidget(Dialog)
+        self.tabs = QtGui.QTabWidget()
 	self.tabs.setGeometry(QtCore.QRect(10, 30, 1000, 180))
-	tab1 = QtGui.QWidget()
-	self.tabs.addTab(tab1,"Tab 1")
+	self.tab1 = QtGui.QWidget()
+
+        self.tabLayout.addWidget(self.urlBox)
+        self.tabLayout.addWidget(self.renderPage)
+        self.tab1.setLayout(self.tabLayout)
+
+	self.tabs.addTab(self.tab1,"Tab 1")
 	
+	self.layout.addWidget(self.tabs)
+
+	Dialog.setLayout(self.layout)
  
         Dialog.setWindowTitle("MDBrowser")
  
