@@ -7,92 +7,36 @@ from PyQt4.QtWebKit import QWebView
 from PyQt4.QtGui import QApplication
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import QUrl
+from PyQt4 import QtCore
 from markdown import markdown
 import urllib2
-'''
-# Qt4 app
-app = QApplication(sys.argv)
-
-win = QWidget()
-win.setWindowTitle('MDBrowser')
 
 
+class TabDialog(QtGui.QWidget):
+    def __init__(self, parent=None):
+	QtGui.QWidget.__init__(self, parent)
 
+        self.layout = QtGui.QVBoxLayout()
 
-# open url
-opener = urllib2.build_opener()
-req=urllib2.Request("http://pantoff0l.nl:8080", data=None, headers={'Content-Type': 'text/markdown'})
-response = opener.open(req)
-md=response.read()
-
-# parse markdown
-html = markdown(md)
-
-# add stylesheet
-html += "<link href='https://gist.githubusercontent.com/tuzz/3331384/raw/d1771755a3e26b039bff217d510ee558a8a1e47d/github.css' rel='stylesheet' type='text/css'>"
-
-# render markdown
-browser = QWebView()
-browser.setHtml(html)
-#browser.load(QUrl(sys.argv[1]))
-browser.show()
-
-app.exec_()
-'''
-class TabDialog(object):
-    def setupUi(self, Dialog):
-        tab1 = QtGui.QWidget()
-        tab2 = QtGui.QWidget()
-
-        vBoxlayout = QtGui.QVBoxLayout()
-
-
-
-class BrowserDialog(object):
-    def setupUi(self, Dialog):
-        Dialog.setObjectName("MDBrowser")
-        Dialog.resize(1024, 768)
-	 
-	self.layout =  QtGui.QVBoxLayout()
-	self.tabLayout = QtGui.QVBoxLayout()
-
-        self.renderPage = QWebView()
-        self.renderPage.setGeometry(QtCore.QRect(0, 200, 1020, 711))
+	# webview
+	self.renderPage = QWebView()
         self.renderPage.setObjectName("renderPage")
 
         # Textbox
         self.urlBox = QtGui.QLineEdit()
-        self.urlBox.setGeometry(QtCore.QRect(10, 20, 1000, 25))
         self.urlBox.setObjectName("urlBox")
 
-	# Tabwidget
-        self.tabs = QtGui.QTabWidget()
-	self.tabs.setGeometry(QtCore.QRect(10, 30, 1000, 180))
-	self.tab1 = QtGui.QWidget()
+	# Set layout
+        self.layout.addWidget(self.urlBox)
+	self.layout.addWidget(self.renderPage)
+        self.setLayout(self.layout)
 
-        self.tabLayout.addWidget(self.urlBox)
-        self.tabLayout.addWidget(self.renderPage)
-        self.tab1.setLayout(self.tabLayout)
+	# event handler
+        self.urlBox.returnPressed.connect(self.loadURL)
 
-	self.tabs.addTab(self.tab1,"Tab 1")
-	
-	self.layout.addWidget(self.tabs)
 
-	Dialog.setLayout(self.layout)
- 
-        Dialog.setWindowTitle("MDBrowser")
- 
-
-class MDBrowser(QtGui.QDialog):
-    def __init__(self, parent=None):
-        QtGui.QWidget.__init__(self, parent)
-        QWebView.__init__(self)
-        self.ui = BrowserDialog()
-        self.ui.setupUi(self)
-        self.ui.urlBox.returnPressed.connect(self.loadURL)
- 
     def loadURL(self):
-        address = str(self.ui.urlBox.text())
+        address = str(self.urlBox.text())
         opener = urllib2.build_opener()
         req=urllib2.Request(address, data=None, headers={'Content-Type': 'text/markdown'})
         response = opener.open(req)
@@ -104,15 +48,82 @@ class MDBrowser(QtGui.QDialog):
         # add stylesheet
         html += "<link href='https://gist.githubusercontent.com/tuzz/3331384/raw/d1771755a3e26b039bff217d510ee558a8a1e47d/github.css' rel='stylesheet' type='text/css'>"
 
-        self.ui.renderPage.setHtml(html)
-        self.ui.renderPage.show()
+        self.renderPage.setHtml(html)
+        self.renderPage.show()
 
 
-        #url = self.ui.urlBox.text()
-        #self.ui.qwebview.load(QUrl(url))
-        #self.show()  
-        #self.ui.lineEdit.setText("")
 
+class TabAddButton(QtGui.QWidget):
+    def __init__(self, parent=None):
+	QtGui.QWidget.__init__(self, parent)
+
+
+
+
+
+class BrowserDialog(object):
+    def setupUi(self, Dialog):
+        Dialog.setObjectName("MDBrowser")
+        Dialog.resize(1024, 768)
+	 
+	self.layout =  QtGui.QVBoxLayout()
+
+	# Tabwidget
+        self.tabs = QtGui.QTabWidget()
+	self.tabs.setGeometry(QtCore.QRect(10, 30, 1000, 180))
+	self.tab1 = QtGui.QWidget()
+
+        self.tab1 = TabDialog()
+	self.tab2 = TabDialog()
+        self.tabAddButton = TabAddButton()
+        self.tabAddButton.setObjectName("addButton")
+
+	self.tabs.addTab(self.tab1,"Tab 1")
+        self.tabs.addTab(self.tab2,"Tab 2")
+        self.tabs.addTab(self.tabAddButton, "+")
+
+	# layout	
+	self.layout.addWidget(self.tabs)
+
+	Dialog.setLayout(self.layout)
+ 
+        Dialog.setWindowTitle("MDBrowser")
+
+	# event handler
+	self.tabs.currentChanged.connect(self.handleTabChange)
+
+	# add button stylesheet
+	stylesheet = """ 
+	    QTabBar::tab:last {
+		    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0.0 #c1e1f5, stop: 1.0 #8fcaee);
+		    border: 1px solid #73bde9;
+		    border-top-left-radius: 4px;
+		    border-top-right-radius: 4px;
+		    padding-left: 10px;
+                    padding-right: 10px;
+		    margin-left: 3px;
+                    bottom: -3px;
+	    }
+	    """
+
+	self.tabs.setStyleSheet(stylesheet) 
+
+    # handle added tab button
+    def handleTabChange(self, index):
+        maxIndex = max(0, self.tabs.count()-1)
+        if (index == maxIndex):
+            tabNew = TabDialog()
+	    self.tabs.insertTab(maxIndex, tabNew, "Tab " + str(maxIndex+1))
+            self.tabs.setCurrentIndex(maxIndex)
+ 
+
+class MDBrowser(QtGui.QDialog):
+    def __init__(self, parent=None):
+        QtGui.QWidget.__init__(self, parent)
+        QWebView.__init__(self)
+        self.ui = BrowserDialog()
+        self.ui.setupUi(self)
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
