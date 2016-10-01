@@ -33,6 +33,15 @@ class TabDialog(QtGui.QWidget):
 
 	# event handler
         self.urlBox.returnPressed.connect(self.loadURL)
+	stylesheet = """ 
+	    QWebView {
+	    border-top-left-radius: 40px;
+		    border-top-right-radius: 40px;
+	    }
+	    """
+
+	self.renderPage.setStyleSheet(stylesheet) 
+
 
 
     def loadURL(self):
@@ -46,7 +55,8 @@ class TabDialog(QtGui.QWidget):
         html = markdown(md)
 
         # add stylesheet
-        html += "<link href='https://gist.githubusercontent.com/tuzz/3331384/raw/d1771755a3e26b039bff217d510ee558a8a1e47d/github.css' rel='stylesheet' type='text/css'>"
+        html += "<link href='https://gist.githubusercontent.com/tuzz/3331384/raw/d1771755a3e26b039bff217d510ee558a8a1e47d/github.css' rel='stylesheet' type='text/css'>" 
+        #html += "<link href='file:///home/jt/MDBrowser/mdbrowser/github.css' rel='stylesheet' type='text/css'>"
 
         self.renderPage.setHtml(html)
         self.renderPage.show()
@@ -71,6 +81,7 @@ class BrowserDialog(object):
 	# Tabwidget
         self.tabs = QtGui.QTabWidget()
 	self.tabs.setGeometry(QtCore.QRect(10, 30, 1000, 180))
+        self.tabs.setTabsClosable(True)
 	self.tab1 = QtGui.QWidget()
 
         self.tab1 = TabDialog()
@@ -82,6 +93,9 @@ class BrowserDialog(object):
         self.tabs.addTab(self.tab2,"Tab 2")
         self.tabs.addTab(self.tabAddButton, "+")
 
+	# disable close button on addtab button
+        self.tabs.tabBar().setTabButton(2, QtGui.QTabBar.RightSide,None)
+
 	# layout	
 	self.layout.addWidget(self.tabs)
 
@@ -91,6 +105,7 @@ class BrowserDialog(object):
 
 	# event handler
 	self.tabs.currentChanged.connect(self.handleTabChange)
+        self.tabs.tabCloseRequested.connect(self.handleClose)
 
 	# add button stylesheet
 	stylesheet = """ 
@@ -116,6 +131,14 @@ class BrowserDialog(object):
             tabNew = TabDialog()
 	    self.tabs.insertTab(maxIndex, tabNew, "Tab " + str(maxIndex+1))
             self.tabs.setCurrentIndex(maxIndex)
+
+    # handle tab close
+    def handleClose(self, index):
+        maxIndex = max(0, self.tabs.count()-1)
+        if (index < maxIndex):
+            self.tabs.removeTab(index)
+
+
  
 
 class MDBrowser(QtGui.QDialog):
