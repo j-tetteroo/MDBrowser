@@ -136,7 +136,14 @@ class BrowserDialog(object):
     def handleClose(self, index):
         maxIndex = max(0, self.tabs.count()-1)
         if (index < maxIndex):
-            self.tabs.removeTab(index)
+            if (self.tabs.count() == 2):
+                return
+            if (self.tabs.currentIndex() == index):
+                self.tabs.setCurrentIndex(index-1)
+                self.tabs.removeTab(index)
+            else:
+                self.tabs.widget(index).deleteLater()
+                self.tabs.removeTab(index)
 
 
  
