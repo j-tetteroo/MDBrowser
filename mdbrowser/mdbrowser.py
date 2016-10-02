@@ -17,6 +17,9 @@ class TabDialog(QtGui.QWidget):
 	QtGui.QWidget.__init__(self, parent)
 
         self.layout = QtGui.QVBoxLayout()
+        self.webViewLayout = QtGui.QVBoxLayout()
+
+	self.frame = QtGui.QFrame()
 
 	# webview
 	self.renderPage = QWebView()
@@ -25,22 +28,32 @@ class TabDialog(QtGui.QWidget):
         # Textbox
         self.urlBox = QtGui.QLineEdit()
         self.urlBox.setObjectName("urlBox")
+        self.urlBox.setPlaceholderText("Enter URL...")
 
 	# Set layout
         self.layout.addWidget(self.urlBox)
-	self.layout.addWidget(self.renderPage)
+        
+        self.webViewLayout.addWidget(self.renderPage)
+        self.frame.setLayout(self.webViewLayout)
+
+        self.layout.addWidget(self.frame)
+
         self.setLayout(self.layout)
+	self.renderPage.setHtml("<h1 style='font-family: sans-serif'>Oh Hai</h1>")
 
 	# event handler
         self.urlBox.returnPressed.connect(self.loadURL)
 	stylesheet = """ 
-	    QWebView {
-	    border-top-left-radius: 40px;
-		    border-top-right-radius: 40px;
+	    QFrame {
+	        background: #fff;	
+		border: 1px solid #cccccc;
+	        border-radius: 10px;
+		margin: 0px;
+                padding-top: 10px;
 	    }
 	    """
 
-	self.renderPage.setStyleSheet(stylesheet) 
+	self.frame.setStyleSheet(stylesheet) 
 
 
 
@@ -140,6 +153,7 @@ class BrowserDialog(object):
                 return
             if (self.tabs.currentIndex() == index):
                 self.tabs.setCurrentIndex(index-1)
+		self.tabs.widget(index).deleteLater()
                 self.tabs.removeTab(index)
             else:
                 self.tabs.widget(index).deleteLater()
