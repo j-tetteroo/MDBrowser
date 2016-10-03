@@ -5,7 +5,7 @@
 
 TODO:
 - [ ] Switch between markdown dialects
-- [ ] Browser tabs
+- [x] Browser tabs
 - [ ] Navigation buttons
 - [ ] Local picture/file rendering
 - [ ] use Requests instead of urllib2
