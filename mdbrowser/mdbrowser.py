@@ -12,6 +12,31 @@ from markdown import markdown
 import urllib2
 
 
+class UrlBar(QtGui.QWidget):
+    def __init__(self, parent=None):
+	QtGui.QWidget.__init__(self, parent)
+
+        self.layout = QtGui.QHBoxLayout()
+
+	# Back/Forward button
+	self.backButton = QtGui.QPushButton("<", self)
+	self.backButton.setMaximumWidth(30)
+	self.forwardButton = QtGui.QPushButton(">", self)
+	self.forwardButton.setMaximumWidth(30)
+
+        # Textbox
+        self.urlBox = QtGui.QLineEdit()
+        self.urlBox.setObjectName("urlBox")
+        self.urlBox.setPlaceholderText("Enter URL...")
+
+	# Set layout
+        self.layout.addWidget(self.backButton)
+        self.layout.addWidget(self.forwardButton)
+        self.layout.addWidget(self.urlBox)
+        self.setLayout(self.layout)
+        
+
+
 class TabDialog(QtGui.QWidget):
     def __init__(self, parent=None):
 	QtGui.QWidget.__init__(self, parent)
@@ -21,17 +46,16 @@ class TabDialog(QtGui.QWidget):
 
 	self.frame = QtGui.QFrame()
 
+	# urlbar
+        self.urlBar = UrlBar()
+        self.urlBar.setObjectName("urlBar")
+
 	# webview
 	self.renderPage = QWebView()
         self.renderPage.setObjectName("renderPage")
 
-        # Textbox
-        self.urlBox = QtGui.QLineEdit()
-        self.urlBox.setObjectName("urlBox")
-        self.urlBox.setPlaceholderText("Enter URL...")
-
 	# Set layout
-        self.layout.addWidget(self.urlBox)
+        self.layout.addWidget(self.urlBar)
         
         self.webViewLayout.addWidget(self.renderPage)
         self.frame.setLayout(self.webViewLayout)
@@ -42,14 +66,14 @@ class TabDialog(QtGui.QWidget):
 	self.renderPage.setHtml("<h1 style='font-family: sans-serif'>Oh Hai</h1>")
 
 	# event handler
-        self.urlBox.returnPressed.connect(self.loadURL)
+        self.urlBar.urlBox.returnPressed.connect(self.loadURL)
 	stylesheet = """ 
 	    QFrame {
 	        background: #fff;	
 		border: 1px solid #cccccc;
 	        border-radius: 10px;
 		margin: 0px;
-                padding-top: 10px;
+                padding-top: 0px;
 	    }
 	    """
 
@@ -58,7 +82,7 @@ class TabDialog(QtGui.QWidget):
 
 
     def loadURL(self):
-        address = str(self.urlBox.text())
+        address = str(self.urlBar.urlBox.text())
         opener = urllib2.build_opener()
         req=urllib2.Request(address, data=None, headers={'Content-Type': 'text/markdown'})
         response = opener.open(req)
