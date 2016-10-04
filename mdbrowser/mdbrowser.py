@@ -10,7 +10,7 @@ from PyQt4.QtCore import QUrl
 from PyQt4 import QtCore
 from markdown import markdown
 import urllib2
-
+import requests
 
 class UrlBar(QtGui.QWidget):
     def __init__(self, parent=None):
@@ -79,25 +79,17 @@ class TabDialog(QtGui.QWidget):
 
 	self.frame.setStyleSheet(stylesheet) 
 
-
-
     def loadURL(self):
+
         address = str(self.urlBar.urlBox.text())
-        opener = urllib2.build_opener()
-        req=urllib2.Request(address, data=None, headers={'Content-Type': 'text/markdown'})
-        response = opener.open(req)
-        md=response.read()
+        response = requests.get(address, headers={'Content-Type': 'text/markdown'})
 
-        # parse markdown
-        html = markdown(md)
-
-        # add stylesheet
-        html += "<link href='https://gist.githubusercontent.com/tuzz/3331384/raw/d1771755a3e26b039bff217d510ee558a8a1e47d/github.css' rel='stylesheet' type='text/css'>" 
-        #html += "<link href='file:///home/jt/MDBrowser/mdbrowser/github.css' rel='stylesheet' type='text/css'>"
+        html = markdown(response.text)
+        html += "<link href='https://gist.githubusercontent.com/tuzz/3331384/raw/d1771755a3e26b039bff217d510ee558a8a1e47d/github.css' rel='stylesheet' type='text/css'>"
 
         self.renderPage.setHtml(html)
+        print(html)
         self.renderPage.show()
-
 
 
 class TabAddButton(QtGui.QWidget):
