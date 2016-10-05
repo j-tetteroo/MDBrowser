@@ -8,9 +8,36 @@ from PyQt4.QtGui import QApplication
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import QUrl
 from PyQt4 import QtCore
-from markdown import markdown
+import markdown
+from markdown.treeprocessors import Treeprocessor
+from markdown.extensions import Extension
+from urlparse import urljoin, urlparse
 import urllib2
 import requests
+from requests_file import FileAdapter
+
+
+class LocalPathExtension(Extension):
+    def __init__(self, **kwargs):
+        self.config = {'path' : ['', 'absolute path']}
+        super(LocalPathExtension, self).__init__(**kwargs)
+
+    def extendMarkdown(self, md, md_globals):
+        extender = LocalPathExtender(md)
+        extender.config = self.getConfigs()
+        md.treeprocessors.add("localpathextender", extender, "_end")
+        md.registerExtension(self)
+
+class LocalPathExtender(Treeprocessor):
+    def run(self, root):
+        pictures = root.getiterator("img")
+        for pic in pictures:
+            if not (pic.attrib["src"].startswith('http://') or pic.attrib["src"].startswith('https://')):
+		print "REPLACE!", pic.attrib["src"], urljoin(self.config["path"], pic.attrib["src"])
+                pic.set("src", urljoin(self.config["path"], pic.attrib["src"]))
+
+
+
 
 class UrlBar(QtGui.QWidget):
     def __init__(self, parent=None):
@@ -20,9 +47,13 @@ class UrlBar(QtGui.QWidget):
 
 	# Back/Forward button
 	self.backButton = QtGui.QPushButton("<", self)
-	self.backButton.setMaximumWidth(30)
+	self.backButton.setMaximumWidth(25)
 	self.forwardButton = QtGui.QPushButton(">", self)
-	self.forwardButton.setMaximumWidth(30)
+	self.forwardButton.setMaximumWidth(25)
+
+	# reload button
+	self.reloadButton = QtGui.QPushButton("R", self)
+	self.reloadButton.setMaximumWidth(25)
 
         # Textbox
         self.urlBox = QtGui.QLineEdit()
@@ -32,6 +63,7 @@ class UrlBar(QtGui.QWidget):
 	# Set layout
         self.layout.addWidget(self.backButton)
         self.layout.addWidget(self.forwardButton)
+        self.layout.addWidget(self.reloadButton)
         self.layout.addWidget(self.urlBox)
         self.setLayout(self.layout)
         
@@ -66,7 +98,7 @@ class TabDialog(QtGui.QWidget):
 	self.renderPage.setHtml("<h1 style='font-family: sans-serif'>Oh Hai</h1>")
 
 	# event handler
-        self.urlBar.urlBox.returnPressed.connect(self.loadURL)
+        self.urlBar.urlBox.returnPressed.connect(self.loadUrl)
 	stylesheet = """ 
 	    QFrame {
 	        background: #fff;	
@@ -79,12 +111,20 @@ class TabDialog(QtGui.QWidget):
 
 	self.frame.setStyleSheet(stylesheet) 
 
-    def loadURL(self):
 
-        address = str(self.urlBar.urlBox.text())
-        response = requests.get(address, headers={'Content-Type': 'text/markdown'})
+    def loadUrl(self):
+        parseUrl = urlparse(str(self.urlBar.urlBox.text()))
+	extender = LocalPathExtension(path=parseUrl.geturl())
+	markdownParser = markdown.Markdown(extensions=[extender])
 
-        html = markdown(response.text)
+        address = parseUrl.geturl()
+
+	session = requests.Session()
+	session.mount('file://', FileAdapter())
+
+        response = session.get(address, headers={'Content-Type': 'text/markdown'})
+
+        html = markdownParser.convert(response.text)
         html += "<link href='https://gist.githubusercontent.com/tuzz/3331384/raw/d1771755a3e26b039bff217d510ee558a8a1e47d/github.css' rel='stylesheet' type='text/css'>"
 
         self.renderPage.setHtml(html)
