@@ -48,8 +48,10 @@ class UrlBar(QtGui.QWidget):
 	# Back/Forward button
 	self.backButton = QtGui.QPushButton("<", self)
 	self.backButton.setMaximumWidth(25)
+	self.backButton.setAutoDefault(False)
 	self.forwardButton = QtGui.QPushButton(">", self)
 	self.forwardButton.setMaximumWidth(25)
+	self.forwardButton.setAutoDefault(False)
 
 	# reload button
 	self.reloadButton = QtGui.QPushButton("R", self)
@@ -78,6 +80,11 @@ class TabDialog(QtGui.QWidget):
 
 	self.frame = QtGui.QFrame()
 
+        # page memory
+        self.backwardqueue = []
+        self.forwardqueue = []
+        self.current = None
+
 	# urlbar
         self.urlBar = UrlBar()
         self.urlBar.setObjectName("urlBar")
@@ -98,7 +105,9 @@ class TabDialog(QtGui.QWidget):
 	self.renderPage.setHtml("<h1 style='font-family: sans-serif'>Oh Hai</h1>")
 
 	# event handler
-        self.urlBar.urlBox.returnPressed.connect(self.loadUrl)
+        self.urlBar.urlBox.returnPressed.connect(self.goCurrent)
+	self.urlBar.forwardButton.clicked.connect(self.goForward)
+	self.urlBar.backButton.clicked.connect(self.goBackward)
 	stylesheet = """ 
 	    QFrame {
 	        background: #fff;	
@@ -109,20 +118,51 @@ class TabDialog(QtGui.QWidget):
 	    }
 	    """
 
-	self.frame.setStyleSheet(stylesheet) 
+	self.frame.setStyleSheet(stylesheet)
 
+    def goForward(self):
+	print "FORWARD"
+        if self.forwardqueue:
+            url = self.forwardqueue.pop()
+            self.urlBar.urlBox.setText(url.geturl())
 
-    def loadUrl(self):
+            self.backwardqueue.append(self.current)
+            self.current = url
+
+            self.loadUrl(url)
+
+    def goBackward(self):
+        print "BACKWARD"
+        if self.backwardqueue:
+            url = self.backwardqueue.pop()
+            self.urlBar.urlBox.setText(url.geturl())
+
+            self.forwardqueue.append(self.current)
+            self.current = url
+
+            self.loadUrl(url)
+
+    def goCurrent(self):
+        print "CURRENT" 
         parseUrl = urlparse(str(self.urlBar.urlBox.text()))
-	extender = LocalPathExtension(path=parseUrl.geturl())
+	print "GO!", parseUrl.geturl()
+	if (self.current != None):
+            self.backwardqueue.append(self.current)
+
+	self.current = parseUrl
+        self.loadUrl(parseUrl)
+
+
+    def loadUrl(self, url):
+	extender = LocalPathExtension(path=url.geturl())
 	markdownParser = markdown.Markdown(extensions=[extender])
 
-        address = parseUrl.geturl()
+        address = url.geturl()
 
 	session = requests.Session()
 	session.mount('file://', FileAdapter())
-
         response = session.get(address, headers={'Content-Type': 'text/markdown'})
+	session.close()
 
         html = markdownParser.convert(response.text)
         html += "<link href='https://gist.githubusercontent.com/tuzz/3331384/raw/d1771755a3e26b039bff217d510ee558a8a1e47d/github.css' rel='stylesheet' type='text/css'>"
