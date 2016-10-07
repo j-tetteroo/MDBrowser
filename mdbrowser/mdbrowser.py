@@ -47,15 +47,16 @@ class UrlBar(QtGui.QWidget):
 
 	# Back/Forward button
 	self.backButton = QtGui.QPushButton("<", self)
-	self.backButton.setMaximumWidth(25)
+	self.backButton.setMaximumWidth(30)
 	self.backButton.setAutoDefault(False)
 	self.forwardButton = QtGui.QPushButton(">", self)
-	self.forwardButton.setMaximumWidth(25)
+	self.forwardButton.setMaximumWidth(30)
 	self.forwardButton.setAutoDefault(False)
 
 	# reload button
 	self.reloadButton = QtGui.QPushButton("R", self)
-	self.reloadButton.setMaximumWidth(25)
+	self.reloadButton.setAutoDefault(False)
+	self.reloadButton.setMaximumWidth(30)
 
         # Textbox
         self.urlBox = QtGui.QLineEdit()
@@ -108,6 +109,7 @@ class TabDialog(QtGui.QWidget):
         self.urlBar.urlBox.returnPressed.connect(self.goCurrent)
 	self.urlBar.forwardButton.clicked.connect(self.goForward)
 	self.urlBar.backButton.clicked.connect(self.goBackward)
+        self.urlBar.reloadButton.clicked.connect(self.goReload)
 	stylesheet = """ 
 	    QFrame {
 	        background: #fff;	
@@ -142,12 +144,20 @@ class TabDialog(QtGui.QWidget):
 
             self.loadUrl(url)
 
+    def goReload(self):
+	print "RELOAD"
+	if (self.current != None):
+            self.urlBar.urlBox.setText(self.current.geturl())
+            self.loadUrl(self.current)
+
     def goCurrent(self):
         print "CURRENT" 
         parseUrl = urlparse(str(self.urlBar.urlBox.text()))
 	print "GO!", parseUrl.geturl()
+
 	if (self.current != None):
-            self.backwardqueue.append(self.current)
+            if (parseUrl.geturl() != self.current.geturl()):
+                self.backwardqueue.append(self.current)
 
 	self.current = parseUrl
         self.loadUrl(parseUrl)
