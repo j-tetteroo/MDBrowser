@@ -4,7 +4,7 @@
 import sys
 
 from PyQt4.QtWebKit import QWebView
-from PyQt4.QtGui import QApplication
+from PyQt4.QtGui import QApplication, QSizePolicy
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import QUrl
 from PyQt4 import QtCore
@@ -87,12 +87,13 @@ class TabDialog(QtGui.QWidget):
         self.current = None
 
 	# urlbar
-        self.urlBar = UrlBar()
+        self.urlBar = UrlBar(self)
         self.urlBar.setObjectName("urlBar")
 
 	# webview
-	self.renderPage = QWebView()
+	self.renderPage = QWebView(self)
         self.renderPage.setObjectName("renderPage")
+        self.renderPage.setSizePolicy(QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding))
 
 	# Set layout
         self.layout.addWidget(self.urlBar)
