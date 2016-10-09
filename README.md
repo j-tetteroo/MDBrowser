@@ -14,5 +14,5 @@ TODO:
 - [ ] manpage rendering
 - [ ] http error handling
 
-![screenshot](mdbrowser.png)
+![screenshot](screenshot.png)
 
