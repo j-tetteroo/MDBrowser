@@ -37,6 +37,27 @@ class LocalPathExtender(Treeprocessor):
                 pic.set("src", urljoin(self.config["path"], pic.attrib["src"]))
 
 
+class ToolBar(QtGui.QWidget):
+    def __init__(self, parent=None):
+	QtGui.QWidget.__init__(self, parent)
+
+        self.layout = QtGui.QHBoxLayout()
+
+	# Open file button
+	self.openButton = QtGui.QPushButton("Open file...", self)
+	#self.openButton.setMaximumWidth(30)
+	self.openButton.setAutoDefault(False)
+
+        # TOC button
+	self.tocButton = QtGui.QPushButton("TOC", self)
+	self.tocButton.setCheckable(True)
+	self.tocButton.setAutoDefault(False)
+
+	self.layout.addWidget(self.openButton)
+	self.layout.addWidget(self.tocButton)
+	self.layout.setMargin(3)
+	self.layout.setSpacing(3)
+	self.setLayout(self.layout)
 
 
 class UrlBar(QtGui.QWidget):
@@ -63,11 +84,14 @@ class UrlBar(QtGui.QWidget):
         self.urlBox.setObjectName("urlBox")
         self.urlBox.setPlaceholderText("Enter URL...")
 
+
 	# Set layout
         self.layout.addWidget(self.backButton)
         self.layout.addWidget(self.forwardButton)
         self.layout.addWidget(self.reloadButton)
         self.layout.addWidget(self.urlBox)
+	self.layout.setMargin(3)
+	self.layout.setSpacing(3)
         self.setLayout(self.layout)
         
 
@@ -90,18 +114,25 @@ class TabDialog(QtGui.QWidget):
         self.urlBar = UrlBar(self)
         self.urlBar.setObjectName("urlBar")
 
+	# toolbar
+        self.toolBar = ToolBar(self)
+        self.toolBar.setObjectName("toolBar")
+
 	# webview
 	self.renderPage = QWebView(self)
         self.renderPage.setObjectName("renderPage")
         self.renderPage.setSizePolicy(QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding))
 
 	# Set layout
+        self.layout.addWidget(self.toolBar)
         self.layout.addWidget(self.urlBar)
         
         self.webViewLayout.addWidget(self.renderPage)
         self.frame.setLayout(self.webViewLayout)
 
         self.layout.addWidget(self.frame)
+	self.layout.setMargin(3)
+	self.layout.setSpacing(3)
 
         self.setLayout(self.layout)
 	self.renderPage.setHtml("<h1 style='font-family: sans-serif'>Oh Hai</h1>")
@@ -122,6 +153,7 @@ class TabDialog(QtGui.QWidget):
 	    """
 
 	self.frame.setStyleSheet(stylesheet)
+
 
     def goForward(self):
 	print "FORWARD"
@@ -166,7 +198,7 @@ class TabDialog(QtGui.QWidget):
 
     def loadUrl(self, url):
 	extender = LocalPathExtension(path=url.geturl())
-	markdownParser = markdown.Markdown(extensions=[extender])
+	markdownParser = markdown.Markdown(extensions=[extender, 'markdown.extensions.toc'])
 
         address = url.geturl()
 
@@ -178,7 +210,7 @@ class TabDialog(QtGui.QWidget):
         html = markdownParser.convert(response.text)
         html += "<link href='https://gist.githubusercontent.com/tuzz/3331384/raw/d1771755a3e26b039bff217d510ee558a8a1e47d/github.css' rel='stylesheet' type='text/css'>"
 
-        self.renderPage.setHtml(html)
+        self.renderPage.setHtml(markdownParser.toc + html)
         print(html)
         self.renderPage.show()
 
