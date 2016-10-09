@@ -14,5 +14,5 @@ TODO:
 - [ ] manpage rendering
 - [ ] http error handling
 
-<img src="http://pantoff0l.nl/~tuxx/markdown.png">
+![screenshot](mdbrowser.png)
 
