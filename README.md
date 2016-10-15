@@ -12,7 +12,7 @@ TODO:
 - [ ] TOC
 - [ ] RSS feed rendering
 - [ ] manpage rendering
-- [ ] http error handling
+- [x] http error handling
 
 ![screenshot](screenshot.png)
 
