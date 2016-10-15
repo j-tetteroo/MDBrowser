@@ -13,6 +13,7 @@ TODO:
 - [ ] RSS feed rendering
 - [ ] manpage rendering
 - [x] http error handling
+- [ ] prevent html page parsing
 
 ![screenshot](screenshot.png)
 
