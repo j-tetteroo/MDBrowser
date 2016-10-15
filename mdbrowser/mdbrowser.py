@@ -196,6 +196,13 @@ class TabDialog(QtGui.QWidget):
         self.loadUrl(parseUrl)
 
 
+    def renderErrorPage(self, header, message):
+        html = "<html><head><style>body { font-family: sans-serif; }</style></head><body>"
+        html += "<h1>" + header + "</h1>"
+        html += "<p>" + message + "</p></body></html>"
+        print html
+        return html
+
     def loadUrl(self, url):
 	extender = LocalPathExtension(path=url.geturl())
 	markdownParser = markdown.Markdown(extensions=[extender, 'markdown.extensions.toc'])
@@ -204,15 +211,39 @@ class TabDialog(QtGui.QWidget):
 
 	session = requests.Session()
 	session.mount('file://', FileAdapter())
-        response = session.get(address, headers={'Content-Type': 'text/markdown'})
-	session.close()
+        try:
+            response = session.get(address, headers={'Content-Type': 'text/markdown'}, timeout=15)
+ 	    response.raise_for_status()
+        except requests.exceptions.ConnectionError as e: 
+            self.renderPage.setHtml(self.renderErrorPage("Connection Error", str(e.message)))
+	except requests.exceptions.HTTPError as e:
+            self.renderPage.setHtml(self.renderErrorPage("HTTP Error", str(e.message)))
+	except requests.exceptions.ProxyError as e:
+            self.renderPage.setHtml(self.renderErrorPage("Proxy Error", str(e.message)))
+        except requests.exceptions.SSLError as e:
+            self.renderPage.setHtml(self.renderErrorPage("SSL Error", str(e.message)))
+        except requests.exceptions.Timeout as e:
+            self.renderPage.setHtml(self.renderErrorPage("Timeout exceeded", str(e.message)))
+        except requests.exceptions.ConnectTimeout as e:
+            self.renderPage.setHtml(self.renderErrorPage("Connection Timeout", str(e.message)))
+        except requests.exceptions.ReadTimeout as e:
+            self.renderPage.setHtml(self.renderErrorPage("Read Timeout", str(e.message)))
+        except requests.exceptions.URLRequired as e:
+            self.renderPage.setHtml(self.renderErrorPage("URL Required", str(e.message)))
+        except requests.exceptions.TooManyRedirects as e:
+            self.renderPage.setHtml(self.renderErrorPage("Too Many Redirects", str(e.message))) 
+        except requests.exceptions.RequestException as e:
+            self.renderPage.setHtml(self.renderErrorPage("General Error", str(e.message)))
+        else:
+            html = markdownParser.convert(response.text)
+            html += "<link href='https://gist.githubusercontent.com/tuzz/3331384/raw/d1771755a3e26b039bff217d510ee558a8a1e47d/github.css' rel='stylesheet' type='text/css'>"
 
-        html = markdownParser.convert(response.text)
-        html += "<link href='https://gist.githubusercontent.com/tuzz/3331384/raw/d1771755a3e26b039bff217d510ee558a8a1e47d/github.css' rel='stylesheet' type='text/css'>"
+            self.renderPage.setHtml(html)
+            print(html)
+        finally:
+  	    session.close()
+            self.renderPage.show()
 
-        self.renderPage.setHtml(markdownParser.toc + html)
-        print(html)
-        self.renderPage.show()
 
 
 class TabAddButton(QtGui.QWidget):
