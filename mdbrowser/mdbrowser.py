@@ -14,6 +14,7 @@ from markdown.extensions import Extension
 from urlparse import urljoin, urlparse
 import urllib2
 import requests
+import os
 from requests_file import FileAdapter
 
 
@@ -142,6 +143,7 @@ class TabDialog(QtGui.QWidget):
 	self.urlBar.forwardButton.clicked.connect(self.goForward)
 	self.urlBar.backButton.clicked.connect(self.goBackward)
         self.urlBar.reloadButton.clicked.connect(self.goReload)
+        self.toolBar.openButton.clicked.connect(self.loadFile)
 	stylesheet = """ 
 	    QFrame {
 	        background: #fff;	
@@ -155,6 +157,7 @@ class TabDialog(QtGui.QWidget):
 	self.frame.setStyleSheet(stylesheet)
 
 
+    # load forward page
     def goForward(self):
 	print "FORWARD"
         if self.forwardqueue:
@@ -166,6 +169,7 @@ class TabDialog(QtGui.QWidget):
 
             self.loadUrl(url)
 
+    # load backward page
     def goBackward(self):
         print "BACKWARD"
         if self.backwardqueue:
@@ -177,12 +181,14 @@ class TabDialog(QtGui.QWidget):
 
             self.loadUrl(url)
 
+    # reload current url
     def goReload(self):
 	print "RELOAD"
 	if (self.current != None):
             self.urlBar.urlBox.setText(self.current.geturl())
             self.loadUrl(self.current)
 
+    # go to the current url in the urlbox
     def goCurrent(self):
         print "CURRENT" 
         parseUrl = urlparse(str(self.urlBar.urlBox.text()))
@@ -202,7 +208,27 @@ class TabDialog(QtGui.QWidget):
         html += "<p>" + message + "</p></body></html>"
         print html
         return html
+        
 
+    # load a local file with a file dialog
+    def loadFile(self):
+        global currentFileDir
+        fileDialog = QtGui.QFileDialog(self)
+        fileDialog.setFileMode(QtGui.QFileDialog.ExistingFile)
+        fileDialog.setOption(0)
+        filename = fileDialog.getOpenFileName(self, 'Open file', str(currentFileDir), "MD Files (*.md);;Text Files (*.txt);;All Files (*.*)")
+        if len(filename) == 0:
+            return
+
+        # store new dir as open file base path
+        currentFileDir = os.path.dirname(str(filename))
+
+        filename = "file://" + str(filename)
+        self.urlBar.urlBox.setText(filename)
+        self.goCurrent()
+
+        
+    # load a file from url into renderpage
     def loadUrl(self, url):
 	extender = LocalPathExtension(path=url.geturl())
 	markdownParser = markdown.Markdown(extensions=[extender, 'markdown.extensions.toc'])
@@ -336,6 +362,10 @@ class MDBrowser(QtGui.QDialog):
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self, parent)
         QWebView.__init__(self)
+
+        global currentFileDir 
+        currentFileDir = os.getcwd()
+
         self.ui = BrowserDialog()
         self.ui.setupUi(self)
 
