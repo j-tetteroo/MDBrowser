@@ -54,8 +54,14 @@ class ToolBar(QtGui.QWidget):
 	self.tocButton.setCheckable(True)
 	self.tocButton.setAutoDefault(False)
 
+        # combo box
+	self.dialect = QtGui.QComboBox(self)
+        self.dialect.addItem("Dialect: Standard markdown", None)
+        self.dialect.addItem("Dialect: Github flavour", None)
+
 	self.layout.addWidget(self.openButton)
 	self.layout.addWidget(self.tocButton)
+        self.layout.addWidget(self.dialect)
 	self.layout.setMargin(3)
 	self.layout.setSpacing(3)
 	self.setLayout(self.layout)
