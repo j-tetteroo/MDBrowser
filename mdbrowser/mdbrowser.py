@@ -16,7 +16,7 @@ import urllib2
 import requests
 import os
 from requests_file import FileAdapter
-
+from mdx_gfm import GithubFlavoredMarkdownExtension  # pip install py-gfm
 
 class LocalPathExtension(Extension):
     def __init__(self, **kwargs):
@@ -237,7 +237,7 @@ class TabDialog(QtGui.QWidget):
     # load a file from url into renderpage
     def loadUrl(self, url):
 	extender = LocalPathExtension(path=url.geturl())
-	markdownParser = markdown.Markdown(extensions=[extender, 'markdown.extensions.toc'])
+	markdownParser = markdown.Markdown(extensions=[extender, 'markdown.extensions.toc', GithubFlavoredMarkdownExtension()])
 
         address = url.geturl()
 
